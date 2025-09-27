@@ -4,16 +4,44 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
-import { Hand, Play, Pause, RotateCcw, Type } from "lucide-react"
+import { Hand, Play, Pause, RotateCcw, Type, Loader2 } from "lucide-react"
 
 export function TextToSignMode() {
   const [inputText, setInputText] = useState("")
+  const [convertedText, setConvertedText] = useState("")
   const [isPlaying, setIsPlaying] = useState(false)
   const [isConverted, setIsConverted] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState("")
 
-  const convertToSign = () => {
-    if (inputText.trim()) {
+  const convertToSign = async () => {
+    if (!inputText.trim()) return
+
+    setIsLoading(true)
+    setError("")
+
+    try {
+      const response = await fetch('/api/text-to-sign', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ text: inputText }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to convert text')
+      }
+
+      setConvertedText(data.convertedText)
       setIsConverted(true)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred')
+      console.error('Error converting text:', err)
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -23,8 +51,10 @@ export function TextToSignMode() {
 
   const resetSession = () => {
     setInputText("")
+    setConvertedText("")
     setIsPlaying(false)
     setIsConverted(false)
+    setError("")
   }
 
   return (
@@ -56,15 +86,43 @@ export function TextToSignMode() {
 
             <Button
               onClick={convertToSign}
-              disabled={!inputText.trim()}
+              disabled={!inputText.trim() || isLoading}
               className="rounded-2xl px-6 py-2 bg-primary hover:bg-primary/90"
             >
-              <Hand className="w-4 h-4 mr-2" />
-              Convert to Signs
+              {isLoading ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Hand className="w-4 h-4 mr-2" />
+              )}
+              {isLoading ? 'Converting...' : 'Convert to Signs'}
             </Button>
           </div>
         </div>
+
+        {error && (
+          <div className="mt-4 p-4 bg-destructive/10 border border-destructive/20 rounded-2xl">
+            <p className="text-sm text-destructive">{error}</p>
+          </div>
+        )}
       </Card>
+
+      {/* Converted Text Display */}
+      {isConverted && convertedText && (
+        <Card className="p-6 mb-6 bg-gradient-to-br from-success/5 to-success/10 border-2 border-success/20 rounded-3xl shadow-lg">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-lg font-semibold text-foreground flex items-center">
+              <Hand className="w-5 h-5 mr-2 text-success" />
+              Converted Sign Text
+            </h3>
+          </div>
+          <div className="p-4 bg-background/50 rounded-2xl border border-border/30">
+            <p className="text-2xl font-bold text-center text-success">"{convertedText}"</p>
+            <p className="text-sm text-muted-foreground text-center mt-2">
+              Original input: "{inputText}"
+            </p>
+          </div>
+        </Card>
+      )}
 
       {/* Sign Animation Card */}
       <Card className="p-8 bg-gradient-to-br from-card to-success/5 border-2 border-border/50 rounded-3xl shadow-lg">
@@ -85,12 +143,14 @@ export function TextToSignMode() {
                 <div className="animate-pulse">
                   <Hand className="w-20 h-20 text-primary mb-4 mx-auto animate-bounce" />
                   <p className="text-primary font-medium">Playing sign animation...</p>
-                  <p className="text-sm text-muted-foreground mt-1">"{inputText.slice(0, 30)}..."</p>
+                  <p className="text-lg font-semibold text-primary mt-2">"{convertedText}"</p>
+                  <p className="text-sm text-muted-foreground mt-1">Original: "{inputText.slice(0, 30)}..."</p>
                 </div>
               ) : (
                 <div>
                   <Hand className="w-16 h-16 text-success mb-4 mx-auto" />
                   <p className="text-success font-medium">Animation ready</p>
+                  <p className="text-lg font-semibold text-foreground mt-2">"{convertedText}"</p>
                   <p className="text-sm text-muted-foreground mt-1">Click play to start</p>
                 </div>
               )}
