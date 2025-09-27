@@ -4,7 +4,7 @@ import type React from "react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Hash, Calculator, MessageCircle, Coffee, Heart, Home, Utensils, Clock } from "lucide-react"
+import { Hash, Calculator, MessageCircle, Coffee } from "lucide-react"
 
 interface Module {
   id: string
@@ -48,38 +48,6 @@ const modules: Module[] = [
     color: "from-orange-500 to-orange-600",
     lessons: 18,
   },
-  {
-    id: "emotions",
-    title: "Emotions",
-    description: "Express feelings and emotions",
-    icon: <Heart className="w-8 h-8" />,
-    color: "from-pink-500 to-pink-600",
-    lessons: 12,
-  },
-  {
-    id: "family-home",
-    title: "Family & Home",
-    description: "Family members and household items",
-    icon: <Home className="w-8 h-8" />,
-    color: "from-indigo-500 to-indigo-600",
-    lessons: 16,
-  },
-  {
-    id: "food-drinks",
-    title: "Food & Drinks",
-    description: "Common food items and beverages",
-    icon: <Utensils className="w-8 h-8" />,
-    color: "from-red-500 to-red-600",
-    lessons: 22,
-  },
-  {
-    id: "time-dates",
-    title: "Time & Dates",
-    description: "Days, months, and time expressions",
-    icon: <Clock className="w-8 h-8" />,
-    color: "from-teal-500 to-teal-600",
-    lessons: 14,
-  },
 ]
 
 interface LearningModulesProps {
@@ -89,7 +57,9 @@ interface LearningModulesProps {
 export function LearningModules({ onModuleSelect }: LearningModulesProps) {
   return (
     <div className="animate-fade-in">
-      <h2 className="text-2xl font-bold text-foreground mb-8 text-center">Choose Your Learning Path</h2>
+      <h2 className="text-2xl font-bold text-foreground mb-8 text-center">
+        Choose Your Learning Path
+      </h2>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {modules.map((module, index) => (
@@ -104,8 +74,12 @@ export function LearningModules({ onModuleSelect }: LearningModulesProps) {
               >
                 {module.icon}
               </div>
-              <CardTitle className="text-lg font-bold text-foreground">{module.title}</CardTitle>
-              <CardDescription className="text-sm text-muted-foreground">{module.description}</CardDescription>
+              <CardTitle className="text-lg font-bold text-foreground">
+                {module.title}
+              </CardTitle>
+              <CardDescription className="text-sm text-muted-foreground">
+                {module.description}
+              </CardDescription>
             </CardHeader>
 
             <CardContent className="pt-0">

@@ -1,27 +1,30 @@
 "use client"
 
-import { useState } from "react"
+import { useState, Suspense, useRef, useEffect } from "react"
+import { Canvas } from "@react-three/fiber"
+import { OrbitControls, useGLTF } from "@react-three/drei"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { ArrowLeft, ArrowRight, Play, Volume2, RotateCcw } from "lucide-react"
+import { ArrowLeft, ArrowRight, Volume2, RotateCcw } from "lucide-react"
+import * as THREE from "three"
 
 interface Lesson {
   id: string
   title: string
-  videoUrl: string
+  modelPath: string
   englishMeaning: string
   gujaratiMeaning: string
   audioUrl?: string
   description: string
 }
 
-// Sample lesson data - in a real app, this would come from an API
+// ✅ Sample lesson data (replace modelPath with your actual .glb file paths)
 const sampleLessons: Record<string, Lesson[]> = {
   alphabets: [
     {
       id: "a",
       title: "Letter A",
-      videoUrl: "/isl-sign-for-letter-a.jpg",
+      modelPath: "/models/boy.glb",
       englishMeaning: "A",
       gujaratiMeaning: "અ",
       description: "Make a fist with your thumb pointing up and to the side.",
@@ -29,7 +32,7 @@ const sampleLessons: Record<string, Lesson[]> = {
     {
       id: "b",
       title: "Letter B",
-      videoUrl: "/isl-sign-for-letter-b.jpg",
+      modelPath: "/models/boy.glb",
       englishMeaning: "B",
       gujaratiMeaning: "બ",
       description: "Hold your hand up with fingers straight and thumb tucked in.",
@@ -39,7 +42,7 @@ const sampleLessons: Record<string, Lesson[]> = {
     {
       id: "1",
       title: "Number 1",
-      videoUrl: "/isl-sign-for-number-1.jpg",
+      modelPath: "/models/boy.glb",
       englishMeaning: "One",
       gujaratiMeaning: "એક",
       description: "Point your index finger up while keeping other fingers closed.",
@@ -50,6 +53,20 @@ const sampleLessons: Record<string, Lesson[]> = {
 interface LessonPageProps {
   moduleId: string
   onBack: () => void
+}
+
+// ✅ Model component
+function Model({ modelPath }: { modelPath: string }) {
+  const group = useRef<THREE.Group>(null)
+  const { scene } = useGLTF(modelPath)
+
+  useEffect(() => {
+    if (group.current) {
+      group.current.rotation.set(0, Math.PI / 2, 0) // Optional: rotate model
+    }
+  }, [])
+
+  return <primitive ref={group} object={scene} scale={2} />
 }
 
 export function LessonPage({ moduleId, onBack }: LessonPageProps) {
@@ -95,7 +112,7 @@ export function LessonPage({ moduleId, onBack }: LessonPageProps) {
             Lesson {currentLessonIndex + 1} of {lessons.length}
           </p>
         </div>
-        <div className="w-32" /> {/* Spacer for centering */}
+        <div className="w-32" />
       </div>
 
       {/* Progress Bar */}
@@ -113,23 +130,20 @@ export function LessonPage({ moduleId, onBack }: LessonPageProps) {
         </CardHeader>
 
         <CardContent className="space-y-6">
-          {/* Video/GIF Area */}
-          <div className="relative bg-muted rounded-3xl p-8 text-center">
-            <div className="relative inline-block">
-              <img
-                src={currentLesson.videoUrl || "/placeholder.svg"}
-                alt={`ISL sign for ${currentLesson.title}`}
-                className="w-80 h-60 object-cover rounded-2xl shadow-lg mx-auto"
-              />
-              <Button
-                size="lg"
-                className="absolute inset-0 m-auto w-16 h-16 rounded-full bg-primary/90 hover:bg-primary text-primary-foreground shadow-lg"
-              >
-                <Play className="w-6 h-6 ml-1" />
-              </Button>
+          {/* 3D Model Viewer */}
+          <div className="relative bg-muted rounded-3xl p-4 flex justify-center">
+            <div className="w-80 h-60 rounded-2xl overflow-hidden bg-muted">
+              <Canvas camera={{ position: [0, 1.2, 3], fov: 50 }}>
+                <ambientLight intensity={0.7} />
+                <directionalLight position={[5, 5, 5]} intensity={1} />
+                <Suspense fallback={null}>
+                  <Model modelPath={currentLesson.modelPath} />
+                </Suspense>
+                <OrbitControls enablePan={false} />
+              </Canvas>
             </div>
 
-            <Button variant="outline" size="sm" className="mt-4 rounded-2xl bg-transparent">
+            <Button variant="outline" size="sm" className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-2xl bg-transparent">
               <RotateCcw className="w-4 h-4 mr-2" />
               Replay
             </Button>
